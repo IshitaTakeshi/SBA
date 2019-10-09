@@ -51,6 +51,10 @@ def test_case_1():
     assert_array_equal(indices_j, [0, 7])
     assert_array_equal(indices_k, [1, 8])
 
+    indices_j, indices_k = indices.shared_point_indices(1, 1)
+    assert_array_equal(indices_j, [1, 5, 8])
+    assert_array_equal(indices_k, [1, 5, 8])
+
 
 def test_case_2():
     # n_points = 2, n_viewpoints = 3,
