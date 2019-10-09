@@ -1,114 +1,114 @@
+import numpy as np
+
 
 # x_ij is a keypoint corresponding to the i-th 3D point
 # observed from the j-th camera (viewpoint).
 # Assume we have a keypoint array X = {x_ij} observed in condition
 # n_points = 4, n_viewpoints = 3,
-# where x_22 x_31 x_43 are missing.
+# where x_11 x_20 x_32 are missing.
 #
-# X            [x_11 x_12 x_13 x_21 x_23 x_32 x_33 x_41 x_42]
-# indices          1    2    3    4    5    6    7    8    9
-# point index      1    1    1    2    2    3    3    4    4
-# viewpoint index  1    2    3    1    3    2    3    1    2
+# X            [x_00 x_01 x_02 x_10 x_12 x_21 x_22 x_30 x_31]
+# indices          0    1    2    3    4    5    6    7    8
+# point index      0    0    0    1    1    2    2    3    3
+# viewpoint index  0    1    2    0    2    1    2    0    1
 
-# viewpoints_by_point[1] == [1, 2, 3]  # x_11 x_12 x_13
-# viewpoints_by_point[2] == [4, 5]     # x_21 x_23
-# viewpoints_by_point[3] == [6, 7]     # x_32 x_33
-# viewpoints_by_point[4] == [8, 9]     # x_41 x_42
+# viewpoints_by_point[0] == [0, 1, 2]  # x_00 x_01 x_02
+# viewpoints_by_point[1] == [3, 4]     # x_10      x_12
+# viewpoints_by_point[2] == [5, 6]     #      x_21 x_22
+# viewpoints_by_point[3] == [7, 8]     # x_30 x_31
 
-# points_by_viewpoint[1] == [1, 4, 8]  # x_11 x_21 x_41
-# points_by_viewpoint[2] == [2, 6, 9]  # x_12 x_32 x_42
-# points_by_viewpoint[3] == [3, 5, 7]  # x_13 x_23 x_33
+# points_by_viewpoint[0] == [0, 3, 7]  # x_00 x_10      x_30
+# points_by_viewpoint[1] == [1, 5, 8]  # x_01      x_21 x_31
+# points_by_viewpoint[2] == [2, 4, 6]  # x_02 x_12 x_22
 #
 # mask = [
-#     1 1 1;  # x_11 x_12 x_13
-#     1 0 1;  # x_21      x_23
-#     0 1 1;  #      x_32 x_33
-#     1 1 0;  # x_41 x_42
+#     1 1 1;  # x_00 x_01 x_02
+#     1 0 1;  # x_10      x_12
+#     0 1 1;  #      x_21 x_22
+#     1 1 0;  # x_30 x_31
 # ]
-
-
-def n_points(indices):
-    return len(indices.viewpoints_by_point)
-
-
-def n_viewpoints(indices):
-    return len(indices.points_by_viewpoint)
 
 
 class Indices(object):
     def __init__(self, viewpoint_indices, point_indices):
         assert(len(viewpoint_indices) == len(point_indices))
 
-        n_points = np.max(point_indices)
-        n_viewpoints = np.max(viewpoint_indices)
-        self.mask = np.empty((n_points, n_viewpoints), dtype=np.bool)
+        n_viewpoints = np.max(viewpoint_indices) + 1
+        n_points = np.max(point_indices) + 1
 
-        self.viewpoints_by_point = [[]] * n_points
-        self.points_by_viewpoint = [[]] * n_viewpoints
+        self.mask = np.zeros((n_points, n_viewpoints), dtype=np.bool)
 
-        unique_points = set()
+        self._viewpoints_by_point = [[] for i in range(n_points)]
+        self._points_by_viewpoint = [[] for j in range(n_viewpoints)]
+
         unique_viewpoints = set()
+        unique_points = set()
 
-        for index, (i, j) in enumerate(zip(point_indices, viewpoint_indices))
-            self.viewpoints_by_point[i].append(index)
-            self.points_by_viewpoint[j].append(index)
+        for index, (i, j) in enumerate(zip(point_indices, viewpoint_indices)):
+            self._viewpoints_by_point[i].append(index)
+            self._points_by_viewpoint[j].append(index)
             self.mask[i, j] = 1
 
-            unique_points.add(i)
             unique_viewpoints.add(j)
+            unique_points.add(i)
 
-        # they cannot be true if some point / viewpoint indices are missing
-        # ex. raises AssertionError if n_viewpoints == 4 and
-        # unique_viewpoints == [1, 2, 4]  (3 is missing)
-        assert(len(unique_viewpoints) == n_viewpoints)
+        # unique_points are accumulated over all viewpoints.
+        # The condition below cannot be true if some point indices
+        # are missing ex. raises AssertionError if n_points == 4 and
+        # unique_points == {0, 1, 3}  (2 is missing)
         assert(len(unique_points) == n_points)
+        # do the same to 'unique_viewpoints'
+        assert(len(unique_viewpoints) == n_viewpoints)
 
+        for i, viewpoints in enumerate(self._viewpoints_by_point):
+            self._viewpoints_by_point[i] = np.array(viewpoints)
 
-def points_by_viewpoint(indices, j):
-    """
-    'points_by_viewpoint(j)' should return indices of 3D points
-    observable from a viewpoint j
-    """
+        for j, points in enumerate(self._points_by_viewpoint):
+            self._points_by_viewpoint[j] = np.array(points)
 
-    return indices.points_by_viewpoint[j]
+    @property
+    def n_points(self):
+        return len(self._viewpoints_by_point)
 
+    @property
+    def n_viewpoints(self):
+        return len(self._points_by_viewpoint)
 
-def viewpoints_by_point(indices, i):
-    """
-    'viewpoints_by_point(i)' should return indices of viewpoints
-    that can observe a point i
-    """
+    def shared_point_indices(self, j, k):
+        """
+        j, k: viewpoint indices
+        This function returns two point indices commonly observed from both viewpoints.
+        These two indices are corresponding to the first and second view respectively
+        """
 
-    return indices.viewpoints_by_point[i]
+        # points_j = [1, 5, 8]
+        # points_j = [2, 4, 6]
+        # mask_j       = [1, 0, 1, 1]
+        # mask_k       = [1, 1, 1, 0]
+        # mask         = [1, 0, 1, 0]
+        # mask[mask_j] = [1, 1, 0]
+        # mask[mask_k] = [1, 0, 1]
+        # points_j[mask[mask_j]] = [1, 5]
+        # points_k[mask[mask_k]] = [2, 6]
 
+        points_j = self._points_by_viewpoint[j]
+        points_k = self._points_by_viewpoint[k]
+        mask_j, mask_k = self.mask[:, j], self.mask[:, k]
+        mask = mask_j & mask_k
+        return (points_j[mask[mask_j]], points_k[mask[mask_k]])
 
-def shared_point_indices(indices, j, k):
-    """
-    j, k: viewpoint indices
-    This function returns two indices of points commonly observed from both viewpoints.
-    These two indices are corresponding to the first and second view respectively
-    """
-    mask_j = indices.mask[:, j]
-    mask_k = indices.mask[:, k]
+    def points_by_viewpoint(self, j):
+        """
+        'points_by_viewpoint(j)' should return indices of 3D points
+        observable from a viewpoint j
+        """
 
-    indices_j = []
-    indices_k = []
+        return self._points_by_viewpoint[j]
 
-    index_j = 0
-    index_k = 0
-    for bit_j, bit_k in zip(mask_j, mask_k)
-        if bit_j == 1
-            index_j += 1
+    def viewpoints_by_point(self, i):
+        """
+        'viewpoints_by_point(i)' should return indices of viewpoints
+        that can observe a point i
+        """
 
-        if bit_k == 1
-            index_k += 1
-
-        if bit_j & bit_k == 1
-            indices_j.append(index_j)
-            indices_k.append(index_k)
-
-    if len(indices_j) == 0  # (== len(indices_k))
-        return None  # no shared points found between j and k
-
-    (indices.points_by_viewpoint[j][indices_j],
-     indices.points_by_viewpoint[k][indices_k])
+        return self._viewpoints_by_point[i]

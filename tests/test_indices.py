@@ -1,103 +1,113 @@
 import pytest
+from numpy.testing import assert_array_equal
 
 from sba.indices import Indices
 
-# visibility mask = [
-#     1 1 1;  # x_11 x_12 x_13
-#     1 0 1;  # x_21      x_23
-#     0 1 1;  #      x_32 x_33
-#     1 1 0;  # x_41 x_42
-# ]
+def test_case_1():
+    # row indicates keypoints generated from the same point
+    # column indicates keypoints observed in the same viewpoint
+    # visibility mask = [
+    #     mask          keypoints         indices
+    #     [1, 1, 1],  # x_00 x_01 x_02  # 0   1   2
+    #     [1, 0, 1],  # x_10      x_12  # 3       4
+    #     [0, 1, 1],  #      x_21 x_22  #     5   6
+    #     [1, 1, 0]   # x_30 x_31       # 7   8
+    # ]
 
-viewpoint_indices = [1, 2, 3, 1, 3, 2, 3, 1, 2]
-point_indices = [1, 1, 1, 2, 2, 3, 3, 4, 4]
-indices = Indices(viewpoint_indices, point_indices)
+    indices = Indices(viewpoint_indices=[0, 1, 2, 0, 2, 1, 2, 0, 1],
+                      point_indices=[0, 0, 0, 1, 1, 2, 2, 3, 3])
 
-assert(n_points(indices) == 4)
-assert(n_viewpoints(indices) == 3)
+    assert(indices.n_points == 4)
+    assert(indices.n_viewpoints == 3)
 
-# get array indices of X for x_*1
-# where x_*1 are projections of all visible points in the 1st viewpoint
-assert_array_equal(points_by_viewpoint(indices, 1), [1, 4, 8])
+    # get array indices of X for x_*0
+    # where x_*0 are projections of all visible points in the 0th viewpoint
+    assert_array_equal(indices.points_by_viewpoint(0), [0, 3, 7])
 
-# get array indices of X for x_*3
-assert_array_equal(points_by_viewpoint(indices, 3), [3, 5, 7])
+    # get array indices of X for x_*2
+    assert_array_equal(indices.points_by_viewpoint(2), [2, 4, 6])
 
-# get array indices of X for x_1*
-# where x_1* are projections of the 1st 3D point in all observable viewpoints
-assert_array_equal(viewpoints_by_point(indices, 1), [1, 2, 3])
+    # get array indices of X for x_0*
+    # where x_0* are projections of the 0st 2D point in all observable viewpoints
+    assert_array_equal(indices.viewpoints_by_point(0), [0, 1, 2])
 
-# get array indices of X for x_4*
-assert_array_equal(viewpoints_by_point(indices, 4), [8, 9])
+    # get array indices of X for x_3*
+    assert_array_equal(indices.viewpoints_by_point(3), [7, 8])
 
-# [x_12, x_32] and [x_13, x_33] are shared
-viewpoints_j, viewpoints_k = shared_point_indices(indices, 2, 3)
-assert_array_equal(viewpoints_j, [2, 6])
-assert_array_equal(viewpoints_k, [3, 7])
+    # [x_01, x_21] and [x_02, x_22] are shared
+    indices_j, indices_k = indices.shared_point_indices(1, 2)
+    assert_array_equal(indices_j, [1, 5])
+    assert_array_equal(indices_k, [2, 6])
 
-# [x_11, x_21] and [x_13, x_23] are shared
-viewpoints_j, viewpoints_k = shared_point_indices(indices, 1, 3)
-assert_array_equal(viewpoints_j, [1, 4])
-assert_array_equal(viewpoints_k, [3, 5])
+    # [x_00, x_10] and [x_02, x_12] are shared
+    indices_j, indices_k = indices.shared_point_indices(0, 2)
+    assert_array_equal(indices_j, [0, 3])
+    assert_array_equal(indices_k, [2, 4])
 
-
-# another case
-# n_points = 2, n_viewpoints = 3,
-# indices     1    2    3
-#   X =   [x_13 x_21 x_22]
-
-# then the corresponding mask should be
-# mask = [
-#     [0 0 1],  #           x_13
-#     [1 1 0]   # x_21 x_22
-# ]
-
-viewpoint_indices = [3, 1, 2]
-point_indices = [1, 2, 2]
-indices = Indices(viewpoint_indices, point_indices)
-
-assert(n_points(indices) == 2)
-assert(n_viewpoints(indices) == 3)
-
-# get array indices of X for x_*1
-assert_array_equal(points_by_viewpoint(indices, 1), [2])
-
-# get array indices of X for x_*3
-assert_array_equal(points_by_viewpoint(indices, 3), [1])
-
-# get array indices of X for x_1*
-assert_array_equal(viewpoints_by_point(indices, 1), [1])
-
-# get array indices of X for x_2*
-assert_array_equal(viewpoints_by_point(indices, 2), [2, 3])
-
-# [x_21] and [x_22] are shared
-viewpoints_j, viewpoints_k = shared_point_indices(indices, 1, 2)
-assert_array_equal(viewpoints_j, [2])
-assert_array_equal(viewpoints_k, [3])
-
-# no points are shared
-assert(shared_point_indices(indices, 1, 3) is None)
+    # [x_00, x_30] and [x_01, x_31] are shared
+    indices_j, indices_k = indices.shared_point_indices(0, 1)
+    assert_array_equal(indices_j, [0, 7])
+    assert_array_equal(indices_k, [1, 8])
 
 
-# second row has only zero elements
-# visibility mask = [
-#     1 0 1 0;
-#     0 0 0 0;
-#     0 1 1 1
-# ]
-viewpoint_indices = [1, 3, 2, 3, 4]
-point_indices = [1, 1, 3, 3, 3]
-with pytest.raises(AssertionError):
-    Indices(viewpoint_indices, point_indices)
+def test_case_2():
+    # n_points = 2, n_viewpoints = 3,
+    # indices     0    1    2
+    #   X =   [x_02 x_10 x_11]
 
-# third column has only zero elements
-# visibility mask = [
-#     1 0 0 1;
-#     0 1 0 0;
-#     0 1 0 1
-# ]
-viewpoint_indices = [1, 4, 2, 2, 4]
-point_indices = [1, 1, 2, 3, 3]
-with pytest.raises(AssertionError):
-    Indices(viewpoint_indices, point_indices)
+    # then the corresponding mask should be
+    # mask = [
+    #     [0 0 1],  #           x_02  #       0
+    #     [1 1 0]   # x_10 x_11       # 1  2
+    # ]
+
+    viewpoint_indices = [2, 0, 1]
+    point_indices = [0, 1, 1]
+    indices = Indices(viewpoint_indices, point_indices)
+
+    assert(indices.n_points == 2)
+    assert(indices.n_viewpoints == 3)
+
+    # get array indices of X for x_*0
+    assert_array_equal(indices.points_by_viewpoint(0), [1])
+
+    # get array indices of X for x_*2
+    assert_array_equal(indices.points_by_viewpoint(2), [0])
+
+    # get array indices of X for x_0*
+    assert_array_equal(indices.viewpoints_by_point(0), [0])
+
+    # get array indices of X for x_1*
+    assert_array_equal(indices.viewpoints_by_point(1), [1, 2])
+
+    # [x_10] and [x_11] are shared
+    indices_j, indices_k = indices.shared_point_indices(0, 1)
+    assert_array_equal(indices_j, [1])
+    assert_array_equal(indices_k, [2])
+
+    # no points are shared
+    indices_j, indices_k = indices.shared_point_indices(0, 2)
+    assert_array_equal(indices_j, [])
+    assert_array_equal(indices_k, [])
+
+    # second row has only zero elements
+    # visibility mask = [
+    #     1 0 1 0;
+    #     0 0 0 0;
+    #     0 1 1 1
+    # ]
+    viewpoint_indices = [0, 2, 1, 2, 3]
+    point_indices = [0, 0, 2, 2, 2]
+    with pytest.raises(AssertionError):
+        Indices(viewpoint_indices, point_indices)
+
+    # third column has only zero elements
+    # visibility mask = [
+    #     1 0 0 1;
+    #     0 1 0 0;
+    #     0 1 0 1
+    # ]
+    viewpoint_indices = [0, 3, 1, 1, 3]
+    point_indices = [0, 0, 1, 2, 2]
+    with pytest.raises(AssertionError):
+        Indices(viewpoint_indices, point_indices)
