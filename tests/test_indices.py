@@ -3,6 +3,7 @@ from numpy.testing import assert_array_equal
 
 from sba.indices import Indices
 
+
 def test_case_1():
     # row indicates keypoints generated from the same point
     # column indicates keypoints observed in the same viewpoint
@@ -17,6 +18,7 @@ def test_case_1():
     indices = Indices(viewpoint_indices=[0, 1, 2, 0, 2, 1, 2, 0, 1],
                       point_indices=[0, 0, 0, 1, 1, 2, 2, 3, 3])
 
+    assert(indices.n_visible == 9)
     assert(indices.n_points == 4)
     assert(indices.n_viewpoints == 3)
 
@@ -61,10 +63,11 @@ def test_case_2():
     #     [1 1 0]   # x_10 x_11       # 1  2
     # ]
 
-    viewpoint_indices = [2, 0, 1]
-    point_indices = [0, 1, 1]
-    indices = Indices(viewpoint_indices, point_indices)
 
+
+    indices = Indices(viewpoint_indices=[2, 0, 1], point_indices=[0, 1, 1])
+
+    assert(indices.n_visible == 3)
     assert(indices.n_points == 2)
     assert(indices.n_viewpoints == 3)
 

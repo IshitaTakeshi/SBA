@@ -32,6 +32,7 @@ import numpy as np
 class Indices(object):
     def __init__(self, viewpoint_indices, point_indices):
         assert(len(viewpoint_indices) == len(point_indices))
+        self.n_visible = len(viewpoint_indices)
 
         n_viewpoints = np.max(viewpoint_indices) + 1
         n_points = np.max(point_indices) + 1
