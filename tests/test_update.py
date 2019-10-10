@@ -1,8 +1,13 @@
 import itertools
 
+import numpy as np
+from numpy.testing import assert_array_almost_equal
+from sba.indices import Indices
+from sba.core import sba
 
-def create_jacobian(mask::BitArray, A::Array, B::Array):
-    assert(A.shape[3] == B.shape[3])
+
+def create_jacobian(mask, A, B):
+    assert(A.shape[0] == B.shape[0])
 
     N = np.sum(mask)
     n_points, n_viewpoints = mask.shape
@@ -22,7 +27,7 @@ def create_jacobian(mask::BitArray, A::Array, B::Array):
     viewpoint_indices = np.empty(N, dtype=np.int64)
     point_indices = np.empty(N, dtype=np.int64)
 
-    index = 1
+    index = 0
     for i, j in itertools.product(range(n_points), range(n_viewpoints)):
         if not mask[i, j]:
             continue
@@ -30,13 +35,13 @@ def create_jacobian(mask::BitArray, A::Array, B::Array):
         viewpoint_indices[index] = j
         point_indices[index] = i
 
-        row = (index - 1) * 2 + 1
+        row = index * 2
 
-        col = (j-1) * n_pose_params + 1
-        JA[row:row+1, col:col+n_pose_params-1] = A[:, :, index]
+        col = j * n_pose_params
+        JA[row:row+2, col:col+n_pose_params] = A[index]
 
-        col = (i-1) * n_point_params + 1
-        JB[row:row+1, col:col+n_point_params-1] = B[:, :, index]
+        col = i * n_point_params
+        JB[row:row+2, col:col+n_point_params] = B[index]
 
         index += 1
 
@@ -49,6 +54,7 @@ def create_jacobian(mask::BitArray, A::Array, B::Array):
 # (empty means that all row elements / column elements = 0)
 # and it seems that at least two '1' elements must be
 # found per one row / column
+# mask.shape == (n_points, n_viewpoints)
 mask = np.array([
     [1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 0, 1, 1, 1, 0, 1, 1, 0],
@@ -58,11 +64,10 @@ mask = np.array([
 ], dtype=np.bool)
 
 N = np.sum(mask)
-
-x_true = np.random.uniform(-9, 9, (2, N))
-x_pred = np.random.uniform(-9, 9, (2, N))
-A = np.random.random((2, 4, N))
-B = np.random.random((2, 3, N))
+x_true = np.random.uniform(-9, 9, (N, 2))
+x_pred = np.random.uniform(-9, 9, (N, 2))
+A = np.random.random((N, 2, 4))
+B = np.random.random((N, 2, 3))
 
 indices, J = create_jacobian(mask, A, B)
 delta_a, delta_b = sba(indices, x_true, x_pred, A, B)
@@ -70,9 +75,8 @@ delta_a, delta_b = sba(indices, x_true, x_pred, A, B)
 delta = np.linalg.solve(np.dot(J.T, J), np.dot(J.T, (x_true - x_pred).flatten()))
 
 n_pose_params = A.shape[2]
-n_viewpoints = mask.shape[2]
+n_viewpoints = mask.shape[1]
 size_A = n_pose_params * n_viewpoints
 
-assert_array_almost_equal(delta[1:size_A], vec(delta_a))
-assert_array_almost_equal(delta[size_A+1:end], vec(delta_b))
-
+assert_array_almost_equal(delta[:size_A], delta_a.flatten())
+assert_array_almost_equal(delta[size_A:], delta_b.flatten())
