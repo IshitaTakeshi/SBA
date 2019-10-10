@@ -28,7 +28,7 @@ def test_check_args():
         # J' * J can not be invertible. ValueError should be thrown
         sba = SBA(viewpoint_indices, point_indices)
         with pytest.raises(ValueError):
-            sba.update(x_true, x_pred, A, B)
+            sba.compute(x_true, x_pred, A, B)
 
     def case2():
         # number of visible keypoints = 14
@@ -52,7 +52,7 @@ def test_check_args():
         # n_rows(J) = n_cols(J)
         # J' * J can be invertible. Nothing should be thrown
         sba = SBA(viewpoint_indices, point_indices)
-        sba.update(x_true, x_pred, A, B)
+        sba.compute(x_true, x_pred, A, B)
 
     case1()
     case2()

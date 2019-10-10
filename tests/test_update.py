@@ -50,7 +50,7 @@ def create_jacobian(mask, A, B):
     return sba, J
 
 
-def test_update():
+def test_compute():
     # there shouldn't be an empty row / column
     # (empty means that all row elements / column elements = 0)
     # and it seems that at least two '1' elements must be
@@ -71,7 +71,7 @@ def test_update():
     B = np.random.random((N, 2, 3))
 
     sba, J = create_jacobian(mask, A, B)
-    delta_a, delta_b = sba.update(x_true, x_pred, A, B)
+    delta_a, delta_b = sba.compute(x_true, x_pred, A, B)
 
     delta = np.linalg.solve(np.dot(J.T, J), np.dot(J.T, (x_true - x_pred).flatten()))
 

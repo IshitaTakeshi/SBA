@@ -181,7 +181,7 @@ class SBA(object):
     def __init__(self, viewpoint_indices, point_indices):
         self.indices = Indices(viewpoint_indices, point_indices)
 
-    def update(self, x_true, x_pred, A, B):
+    def compute(self, x_true, x_pred, A, B):
         """
         """
         check_args(self.indices, x_true, x_pred, A, B)
