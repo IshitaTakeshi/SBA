@@ -50,33 +50,34 @@ def create_jacobian(mask, A, B):
     return indices, J
 
 
-# there shouldn't be an empty row / column
-# (empty means that all row elements / column elements = 0)
-# and it seems that at least two '1' elements must be
-# found per one row / column
-# mask.shape == (n_points, n_viewpoints)
-mask = np.array([
-    [1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 1, 1, 1, 0, 1, 1, 0],
-    [1, 1, 1, 1, 1, 1, 0, 1, 0],
-    [1, 0, 0, 1, 1, 1, 0, 1, 1],
-    [0, 0, 1, 0, 0, 0, 0, 0, 1]
-], dtype=np.bool)
+def test_update():
+    # there shouldn't be an empty row / column
+    # (empty means that all row elements / column elements = 0)
+    # and it seems that at least two '1' elements must be
+    # found per one row / column
+    # mask.shape == (n_points, n_viewpoints)
+    mask = np.array([
+        [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 1, 1, 1, 0, 1, 1, 0],
+        [1, 1, 1, 1, 1, 1, 0, 1, 0],
+        [1, 0, 0, 1, 1, 1, 0, 1, 1],
+        [0, 0, 1, 0, 0, 0, 0, 0, 1]
+    ], dtype=np.bool)
 
-N = np.sum(mask)
-x_true = np.random.uniform(-9, 9, (N, 2))
-x_pred = np.random.uniform(-9, 9, (N, 2))
-A = np.random.random((N, 2, 4))
-B = np.random.random((N, 2, 3))
+    N = np.sum(mask)
+    x_true = np.random.uniform(-9, 9, (N, 2))
+    x_pred = np.random.uniform(-9, 9, (N, 2))
+    A = np.random.random((N, 2, 4))
+    B = np.random.random((N, 2, 3))
 
-indices, J = create_jacobian(mask, A, B)
-delta_a, delta_b = sba(indices, x_true, x_pred, A, B)
+    indices, J = create_jacobian(mask, A, B)
+    delta_a, delta_b = sba(indices, x_true, x_pred, A, B)
 
-delta = np.linalg.solve(np.dot(J.T, J), np.dot(J.T, (x_true - x_pred).flatten()))
+    delta = np.linalg.solve(np.dot(J.T, J), np.dot(J.T, (x_true - x_pred).flatten()))
 
-n_pose_params = A.shape[2]
-n_viewpoints = mask.shape[1]
-size_A = n_pose_params * n_viewpoints
+    n_pose_params = A.shape[2]
+    n_viewpoints = mask.shape[1]
+    size_A = n_pose_params * n_viewpoints
 
-assert_array_almost_equal(delta[:size_A], delta_a.flatten())
-assert_array_almost_equal(delta[size_A:], delta_b.flatten())
+    assert_array_almost_equal(delta[:size_A], delta_a.flatten())
+    assert_array_almost_equal(delta[size_A:], delta_b.flatten())

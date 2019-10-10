@@ -67,8 +67,6 @@ def test_case_2():
     #     [1 1 0]   # x_10 x_11       # 1  2
     # ]
 
-
-
     indices = Indices(viewpoint_indices=[2, 0, 1], point_indices=[0, 1, 1])
 
     assert(indices.n_visible == 3)
