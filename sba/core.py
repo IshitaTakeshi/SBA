@@ -53,9 +53,8 @@ def calc_U(indices, A):
     U = np.empty((m, n_pose_params, n_pose_params))
 
     for j in range(m):
-        # Aj = [Aij for i in points_by_viewpoint(j)]
-        Aj = A[indices.points_by_viewpoint(j)]
-        U[j] = calc_Uj(Aj)
+        I = indices.points_by_viewpoint(j)
+        U[j] = calc_Uj(A[I])
 
     return U
 
@@ -95,16 +94,13 @@ def calc_Y(indices, W, V_inv):
     return Y
 
 
-# TODO accelerate
 def calc_S(indices, U, Y, W):
-    assert(Y.shape == W.shape)
-
+    m = indices.n_viewpoints
     n_pose_params = U.shape[1]
 
     def block(index):
         return slice(n_pose_params * index, n_pose_params * (index + 1))
 
-    m = indices.n_viewpoints
     S = np.zeros((m * n_pose_params, m * n_pose_params))
 
     for j, k in itertools.product(range(m), range(m)):
@@ -113,15 +109,12 @@ def calc_S(indices, U, Y, W):
         if len(indices_j) == 0 and len(indices_k) == 0:
             continue
 
-        Sjk = S[block(j), block(k)]
-
         if j == k:
-            Sjk += U[j]
+            S[block(j), block(k)] += U[j]
 
-        for ij, ik in zip(indices_j, indices_k):
-            Sjk -= np.dot(Y[ij], W[ik].T)
-
-        S[block(j), block(k)] = Sjk
+        # sum(np.dot(Y[ij], W[ik].T) for ij, ik in zip(indices_j, indices_k))
+        S[block(j), block(k)] -= np.einsum('ijk,ilk->jl',
+                                           Y[indices_j], W[indices_k])
 
     return S
 
