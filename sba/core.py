@@ -1,6 +1,8 @@
 import itertools
 import numpy as np
 
+from sba.indices import Indices
+
 
 def calc_epsilon(x_true, x_pred):
     return x_true - x_pred
@@ -175,19 +177,25 @@ def check_args(indices, x_true, x_pred, A, B):
         raise ValueError("n_rows(J) must be greater than n_cols(J)")
 
 
-def sba(indices, x_true, x_pred, A, B):
-    check_args(indices, x_true, x_pred, A, B)
+class SBA(object):
+    def __init__(self, viewpoint_indices, point_indices):
+        self.indices = Indices(viewpoint_indices, point_indices)
 
-    U = calc_U(indices, A)
-    V_inv = calc_V_inv(indices, B)
-    W = calc_W(indices, A, B)
-    Y = calc_Y(indices, W, V_inv)
-    S = calc_S(indices, U, Y, W)
-    epsilon = calc_epsilon(x_true, x_pred)
-    epsilon_a = calc_epsilon_a(indices, A, epsilon)
-    epsilon_b = calc_epsilon_b(indices, B, epsilon)
-    e = calc_e(indices, Y, epsilon_a, epsilon_b)
-    delta_a = calc_delta_a(S, e)
-    delta_b = calc_delta_b(indices, V_inv, W, epsilon_b, delta_a)
+    def update(self, x_true, x_pred, A, B):
+        """
+        """
+        check_args(self.indices, x_true, x_pred, A, B)
 
-    return delta_a, delta_b
+        U = calc_U(self.indices, A)
+        V_inv = calc_V_inv(self.indices, B)
+        W = calc_W(self.indices, A, B)
+        Y = calc_Y(self.indices, W, V_inv)
+        S = calc_S(self.indices, U, Y, W)
+        epsilon = calc_epsilon(x_true, x_pred)
+        epsilon_a = calc_epsilon_a(self.indices, A, epsilon)
+        epsilon_b = calc_epsilon_b(self.indices, B, epsilon)
+        e = calc_e(self.indices, Y, epsilon_a, epsilon_b)
+        delta_a = calc_delta_a(S, e)
+        delta_b = calc_delta_b(self.indices, V_inv, W, epsilon_b, delta_a)
+
+        return delta_a, delta_b

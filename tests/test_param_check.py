@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from sba.indices import Indices
-from sba.core import sba
+from sba.core import SBA
 
 
 def test_check_args():
@@ -14,7 +14,6 @@ def test_check_args():
         #         1 1 1 0]
         viewpoint_indices = [0, 1, 2, 3, 0, 2, 3, 0, 2, 3, 0, 1, 2]
         point_indices = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
-        indices = Indices(viewpoint_indices, point_indices)
 
         n_visible = len(viewpoint_indices)
         A = np.random.random(size=(n_visible, 2, 4))  # n_pose_params = 4
@@ -27,8 +26,9 @@ def test_check_args():
         #           = 3 * 4 + 4 * 4 = 12 + 16 = 28
         # n_rows(J) < n_cols(J)
         # J' * J can not be invertible. ValueError should be thrown
+        sba = SBA(viewpoint_indices, point_indices)
         with pytest.raises(ValueError):
-            sba(indices, x_true, x_pred, A, B)
+            sba.update(x_true, x_pred, A, B)
 
     def case2():
         # number of visible keypoints = 14
@@ -51,7 +51,8 @@ def test_check_args():
         #           = 3 * 4 + 4 * 4 = 12 + 16 = 28
         # n_rows(J) = n_cols(J)
         # J' * J can be invertible. Nothing should be thrown
-        sba(indices, x_true, x_pred, A, B)
+        sba = SBA(viewpoint_indices, point_indices)
+        sba.update(x_true, x_pred, A, B)
 
     case1()
     case2()

@@ -3,7 +3,7 @@ import itertools
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 from sba.indices import Indices
-from sba.core import sba
+from sba.core import SBA
 
 
 def create_jacobian(mask, A, B):
@@ -45,9 +45,9 @@ def create_jacobian(mask, A, B):
 
         index += 1
 
-    indices = Indices(viewpoint_indices, point_indices)
+    sba = SBA(viewpoint_indices, point_indices)
     J = np.hstack((JA, JB))
-    return indices, J
+    return sba, J
 
 
 def test_update():
@@ -70,8 +70,8 @@ def test_update():
     A = np.random.random((N, 2, 4))
     B = np.random.random((N, 2, 3))
 
-    indices, J = create_jacobian(mask, A, B)
-    delta_a, delta_b = sba(indices, x_true, x_pred, A, B)
+    sba, J = create_jacobian(mask, A, B)
+    delta_a, delta_b = sba.update(x_true, x_pred, A, B)
 
     delta = np.linalg.solve(np.dot(J.T, J), np.dot(J.T, (x_true - x_pred).flatten()))
 
