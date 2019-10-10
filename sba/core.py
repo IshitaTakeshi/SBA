@@ -156,17 +156,19 @@ def calc_delta_b(indices, V_inv, W, epsilon_b, delta_a):
     return e
 
 
-def check_params(indices, x_true, x_pred, A, B):
-    assert(A.shape[3] == B.shape[3] == x_true.shape[2] == x_pred.shape[2])
+def check_args(indices, x_true, x_pred, A, B):
+    # check the number of points
+    assert(A.shape[0] == B.shape[0] == x_true.shape[0] == x_pred.shape[0])
+    # check the jacobians' shape
     assert(A.shape[1] == B.shape[1] == 2)
 
-    n_visible_keypoints = x_true.shape[2]
+    n_visible = x_true.shape[0]
     n_pose_params = A.shape[2]
     n_point_params = B.shape[2]
 
-    n_rows = 2 * n_visible_keypoints
-    n_cols_a = n_pose_params * n_viewpoints(indices)
-    n_cols_b = n_point_params * n_points(indices)
+    n_rows = 2 * n_visible
+    n_cols_a = n_pose_params * indices.n_viewpoints
+    n_cols_b = n_point_params * indices.n_points
 
     # J' * J cannot be invertible if n_rows(J) < n_cols(J)
     if n_rows < n_cols_a + n_cols_b:
@@ -174,7 +176,7 @@ def check_params(indices, x_true, x_pred, A, B):
 
 
 def sba(indices, x_true, x_pred, A, B):
-    check_params(indices, x_true, x_pred, A, B)
+    check_args(indices, x_true, x_pred, A, B)
 
     U = calc_U(indices, A)
     V_inv = calc_V_inv(indices, B)
