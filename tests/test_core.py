@@ -6,26 +6,6 @@ from sba.core import (calc_delta_a, calc_delta_b, calc_e,
                       calc_U, calc_V_inv, calc_W, calc_Y, calc_S)
 
 
-def test_calc_epsilon():
-    x_true = np.array([
-        [1, 3],
-        [2, 1],
-        [3, 2]
-    ])
-    x_pred = np.array([
-        [4, 5],
-        [3, 0],
-        [2, 1]
-    ])
-    expected = np.array([
-        [-3, -2],
-        [-1, 1],
-        [1, 1]
-    ])
-
-    assert_array_equal(calc_epsilon(x_true, x_pred), expected)
-
-
 n_pose_params = 4
 n_point_params = 3
 n_visible = 4  # number of visible points
@@ -169,3 +149,23 @@ def test_calc_delta():
         np.dot(V_inv[1],
                epsilon_b[1] - (np.dot(W[2].T, delta_a[1]) + np.dot(W[3].T, delta_a[2])))
     )
+
+
+def test_calc_epsilon():
+    x_true = np.array([
+        [1, 3],
+        [2, 1],
+        [3, 2]
+    ])
+    x_pred = np.array([
+        [4, 5],
+        [3, 0],
+        [2, 1]
+    ])
+    expected = np.array([
+        [-3, -2],
+        [-1, 1],
+        [1, 1]
+    ])
+
+    assert_array_equal(calc_epsilon(x_true, x_pred), expected)
