@@ -55,7 +55,6 @@ def calc_U(indices, A):
     for j in range(m):
         I = indices.points_by_viewpoint(j)
         U[j] = calc_Uj(A[I])
-
     return U
 
 
@@ -151,6 +150,16 @@ def calc_delta_b(indices, V_inv, W, epsilon_b, delta_a):
     return e
 
 
+def can_run_ba(n_viewpoints, n_points, n_visible,
+               n_pose_params, n_point_params):
+    n_rows = 2 * n_visible
+    n_cols_a = n_pose_params * n_viewpoints
+    n_cols_b = n_point_params * n_points
+    n_cols = n_cols_a + n_cols_b
+    # J' * J cannot be invertible if n_rows(J) < n_cols(J)
+    return n_rows >= n_cols
+
+
 def check_args(indices, x_true, x_pred, A, B):
     # check the number of points
     assert(A.shape[0] == B.shape[0] == x_true.shape[0] == x_pred.shape[0])
@@ -158,15 +167,11 @@ def check_args(indices, x_true, x_pred, A, B):
     assert(A.shape[1] == B.shape[1] == 2)
 
     n_visible = x_true.shape[0]
-    n_pose_params = A.shape[2]
-    n_point_params = B.shape[2]
 
-    n_rows = 2 * n_visible
-    n_cols_a = n_pose_params * indices.n_viewpoints
-    n_cols_b = n_point_params * indices.n_points
-
-    # J' * J cannot be invertible if n_rows(J) < n_cols(J)
-    if n_rows < n_cols_a + n_cols_b:
+    if not can_run_ba(indices.n_viewpoints, indices.n_points,
+                      n_visible=x_true.shape[0],
+                      n_pose_params=A.shape[2],
+                      n_point_params=B.shape[2]):
         raise ValueError("n_rows(J) must be greater than n_cols(J)")
 
 
