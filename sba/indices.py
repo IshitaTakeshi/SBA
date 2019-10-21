@@ -29,9 +29,18 @@ import numpy as np
 # ]
 
 
+def indices_are_unique(viewpoint_indices, point_indices):
+    indices = np.vstack((point_indices, viewpoint_indices))
+    unique = np.unique(indices, axis=1)
+    return unique.shape[1] == len(point_indices)
+
+
 class Indices(object):
     def __init__(self, viewpoint_indices, point_indices):
         assert(len(viewpoint_indices) == len(point_indices))
+        if not indices_are_unique(viewpoint_indices, point_indices):
+            raise ValueError("Found non-unique (i, j) pair")
+
         self.n_visible = len(viewpoint_indices)
 
         n_viewpoints = np.max(viewpoint_indices) + 1

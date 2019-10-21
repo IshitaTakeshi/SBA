@@ -1,7 +1,19 @@
 import pytest
 from numpy.testing import assert_array_equal
 
-from sba.indices import Indices
+from sba.indices import Indices, indices_are_unique
+
+
+def test_indices_are_unique():
+    # unique
+    Indices([0, 1, 2, 0, 2, 1, 2, 0, 1],
+            [0, 0, 0, 1, 1, 2, 2, 3, 3])
+
+    with pytest.raises(ValueError):
+        # second and third are duplicated
+        #        0  1  2  3  4  5  6  7  8
+        Indices([0, 1, 2, 2, 2, 1, 2, 0, 1],
+                [0, 0, 0, 1, 1, 2, 2, 3, 3])
 
 
 def test_case_1():
