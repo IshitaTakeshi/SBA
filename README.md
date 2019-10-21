@@ -1,4 +1,4 @@
-# SBA
+# Sparse Bundle Adjustment (SBA)
 
 [![Build Status](https://travis-ci.org/IshitaTakeshi/SBA.svg?branch=master)](https://travis-ci.org/IshitaTakeshi/SBA)
 [![codecov](https://codecov.io/gh/IshitaTakeshi/SBA/branch/master/graph/badge.svg)](https://codecov.io/gh/IshitaTakeshi/SBA)
