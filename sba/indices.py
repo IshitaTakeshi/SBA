@@ -87,8 +87,8 @@ class Indices(object):
     def shared_point_indices(self, j, k):
         """
         j, k: viewpoint indices
-        This function returns two point indices commonly observed from both viewpoints.
-        These two indices are corresponding to the first and second view respectively
+        Returns two point indices commonly observed from both viewpoints.
+        These two indices represent the first and second view respectively.
         """
 
         # points_j = [1, 5, 8]
