@@ -5,8 +5,8 @@
 
 Python implementation of Sparse Bundle Adjustment.
 
-Bundle Adjustment is a problem of minimizing the reprojection error concerning all 3D points and camera pose parameters, which is usually solved by the Gauss-Newton or Levenberg-Marquardt method.
-These update methods are suffered from the computation cost because inverting the approximated Hessian is highly expensive.
+Bundle Adjustment is a problem of minimizing the reprojection error concerning all 3D points and camera pose parameters, which is usually solved by the Gauss-Newton or Levenberg-Marquardt method.  
+These update methods are suffered from the computation cost because inverting the approximated Hessian is highly expensive.  
 Sparse Bundle Adjustment is an algorithm that can calculate the update efficiently by employing the sparse structure of the Jacobian.
 
 
