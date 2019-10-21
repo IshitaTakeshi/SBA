@@ -3,7 +3,11 @@
 [![Build Status](https://travis-ci.org/IshitaTakeshi/SBA.svg?branch=develop)](https://travis-ci.org/IshitaTakeshi/SBA)
 [![codecov](https://codecov.io/gh/IshitaTakeshi/SBA/branch/develop/graph/badge.svg)](https://codecov.io/gh/IshitaTakeshi/SBA)
 
-Python implementation of Sparse Bundle Adjustment
+Python implementation of Sparse Bundle Adjustment.
+
+Bundle Adjustment is a problem of minimizing the reprojection error concerning all 3D points and camera pose parameters, which is usually solved by the Gauss-Newton or Levenberg-Marquardt method.
+These update methods are suffered from the computation cost because inverting the approximated Hessian is highly expensive.
+Sparse Bundle Adjustment is an algorithm that can calculate the update efficiently by employing the sparse structure of the Jacobian.
 
 
 ```
