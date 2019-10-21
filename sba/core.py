@@ -176,14 +176,16 @@ def check_args(indices, x_true, x_pred, A, B):
 
 
 class SBA(object):
-    def __init__(self, viewpoint_indices, point_indices):
+    def __init__(self, viewpoint_indices, point_indices, check_args=True):
         self.indices = Indices(viewpoint_indices, point_indices)
+        self.do_check_args = check_args
 
     def compute(self, x_true, x_pred, A, B):
         """
         """
-        check_args(self.indices, x_true, x_pred, A, B)
 
+        if self.do_check_args:
+            check_args(self.indices, x_true, x_pred, A, B)
         U = calc_U(self.indices, A)
         V_inv = calc_V_inv(self.indices, B)
         W = calc_W(self.indices, A, B)
