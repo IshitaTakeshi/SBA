@@ -67,7 +67,7 @@ def calc_V_inv(indices, B):
     for i in range(n):
         J = indices.viewpoints_by_point(i)
         Vi = calc_Vi(B[J])
-        V_inv[i] = np.linalg.inv(Vi)
+        V_inv[i] = np.linalg.pinv(Vi)
     return V_inv
 
 
