@@ -68,8 +68,8 @@ def test_calc_delta():
 
     V_inv = calc_V_inv(indices, B)
     assert(V_inv.shape == (n_points, n_point_params, n_point_params))
-    assert_array_equal(V_inv[0], np.linalg.inv(BtB[0] + BtB[1]))
-    assert_array_equal(V_inv[1], np.linalg.inv(BtB[2] + BtB[3]))
+    assert_array_almost_equal(V_inv[0], np.linalg.inv(BtB[0] + BtB[1]))
+    assert_array_almost_equal(V_inv[1], np.linalg.inv(BtB[2] + BtB[3]))
 
     W = calc_W(indices, A, B)
     assert(W.shape == (n_visible, n_pose_params, n_point_params))
@@ -96,10 +96,10 @@ def test_calc_delta():
 
     Y = calc_Y(indices, W, V_inv)
     assert(Y.shape == (n_visible, n_pose_params, n_point_params))
-    assert_array_equal(Y[0], np.dot(W[0], V_inv[0]))  # (i, j) = (0, 0)
-    assert_array_equal(Y[1], np.dot(W[1], V_inv[0]))  # (i, j) = (0, 1)
-    assert_array_equal(Y[2], np.dot(W[2], V_inv[1]))  # (i, j) = (1, 1)
-    assert_array_equal(Y[3], np.dot(W[3], V_inv[1]))  # (i, j) = (1, 2)
+    assert_array_almost_equal(Y[0], np.dot(W[0], V_inv[0]))  # (i, j) = (0, 0)
+    assert_array_almost_equal(Y[1], np.dot(W[1], V_inv[0]))  # (i, j) = (0, 1)
+    assert_array_almost_equal(Y[2], np.dot(W[2], V_inv[1]))  # (i, j) = (1, 1)
+    assert_array_almost_equal(Y[3], np.dot(W[3], V_inv[1]))  # (i, j) = (1, 2)
 
     e = calc_e(indices, Y, epsilon_a, epsilon_b)
     assert(e.shape == (n_viewpoints, n_pose_params))
