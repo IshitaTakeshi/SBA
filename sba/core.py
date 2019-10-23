@@ -8,7 +8,7 @@ def calc_epsilon(x_true, x_pred):
     return x_true - x_pred
 
 
-def calc_epsilon_a(indices, A, epsilon):
+def calc_epsilon_a(indices, A, epsilon, weights):
     m = indices.n_viewpoints
 
     n_pose_params = A.shape[2]
@@ -16,37 +16,37 @@ def calc_epsilon_a(indices, A, epsilon):
 
     for j in range(m):
         for ij in indices.points_by_viewpoint(j):
-            epsilon_a[j] += np.dot(A[ij].T, epsilon[ij])
+            epsilon_a[j] += np.dot(np.dot(A[ij].T, weights[ij]), epsilon[ij])
     return epsilon_a
 
 
-def calc_epsilon_b(indices, B, epsilon):
+def calc_epsilon_b(indices, B, epsilon, weights):
     n = indices.n_points
     n_point_params = B.shape[2]
 
     epsilon_b = np.zeros((n, n_point_params))
     for i in range(n):
         for ij in indices.viewpoints_by_point(i):
-            epsilon_b[i] += np.dot(B[ij].T, epsilon[ij])
+            epsilon_b[i] += np.dot(np.dot(B[ij].T, weights[ij]), epsilon[ij])
     return epsilon_b
 
 
-def calc_XtX(XS):
-    XtX = np.zeros((XS.shape[2], XS.shape[2]))
-    for X in XS:
-        XtX += np.dot(X.T, X)
-    return XtX
+def calc_XTWX(XS, weights):
+    XTWX = np.zeros((XS.shape[2], XS.shape[2]))
+    for X, weight in zip(XS, weights):
+        XTWX += np.dot(np.dot(X.T, weight), X)
+    return XTWX
 
 
-def calc_Uj(Aj):
-    return calc_XtX(Aj)
+def calc_Uj(Aj, weights):
+    return calc_XTWX(Aj, weights)
 
 
-def calc_Vi(Bi):
-    return calc_XtX(Bi)
+def calc_Vi(Bi, weights):
+    return calc_XTWX(Bi, weights)
 
 
-def calc_U(indices, A):
+def calc_U(indices, A, weights):
     n_pose_params = A.shape[2]
     m = indices.n_viewpoints
 
@@ -54,11 +54,11 @@ def calc_U(indices, A):
 
     for j in range(m):
         I = indices.points_by_viewpoint(j)
-        U[j] = calc_Uj(A[I])
+        U[j] = calc_Uj(A[I], weights[I])
     return U
 
 
-def calc_V_inv(indices, B):
+def calc_V_inv(indices, B, weights):
     n_point_params = B.shape[2]
     n = indices.n_points
 
@@ -66,12 +66,12 @@ def calc_V_inv(indices, B):
 
     for i in range(n):
         J = indices.viewpoints_by_point(i)
-        Vi = calc_Vi(B[J])
+        Vi = calc_Vi(B[J], weights[J])
         V_inv[i] = np.linalg.pinv(Vi)
     return V_inv
 
 
-def calc_W(indices, A, B):
+def calc_W(indices, A, B, weights):
     assert(A.shape[0] == B.shape[0])
 
     n_pose_params, n_point_params = A.shape[2], B.shape[2]
@@ -79,7 +79,7 @@ def calc_W(indices, A, B):
     W = np.empty((indices.n_visible, n_pose_params, n_point_params))
 
     for index in range(indices.n_visible):
-        W[index] = np.dot(A[index].T, B[index])
+        W[index] = np.dot(np.dot(A[index].T, weights[index]), B[index])
 
     return W
 
@@ -261,17 +261,17 @@ class SBA(object):
                 delta_b (np.ndarray), shape (n_points, n_point_params):
                     Update of 3D points.
         """
-
         if self.do_check_args:
             check_args(self.indices, x_true, x_pred, A, B)
-        U = calc_U(self.indices, A)
-        V_inv = calc_V_inv(self.indices, B)
-        W = calc_W(self.indices, A, B)
+
+        U = calc_U(self.indices, A, self.weights)
+        V_inv = calc_V_inv(self.indices, B, self.weights)
+        W = calc_W(self.indices, A, B, self.weights)
         Y = calc_Y(self.indices, W, V_inv)
         S = calc_S(self.indices, U, Y, W)
         epsilon = calc_epsilon(x_true, x_pred)
-        epsilon_a = calc_epsilon_a(self.indices, A, epsilon)
-        epsilon_b = calc_epsilon_b(self.indices, B, epsilon)
+        epsilon_a = calc_epsilon_a(self.indices, A, epsilon, self.weights)
+        epsilon_b = calc_epsilon_b(self.indices, B, epsilon, self.weights)
         e = calc_e(self.indices, Y, epsilon_a, epsilon_b)
         delta_a = calc_delta_a(S, e)
         delta_b = calc_delta_b(self.indices, V_inv, W, epsilon_b, delta_a)
