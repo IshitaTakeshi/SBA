@@ -181,7 +181,9 @@ class SBA(object):
             Array of viewpoint indices.
         point_indices (list of ints), size n_keypoints:
             Array of point indices.
-        check_args (bool, optional):
+        weights (np.ndarray), shape (n_keypoints, 2, 2):
+            Weight matrices
+        do_check_args (bool, optional):
             | `SBA.compute` checks if given arguments are satisfying
               the condition that the approximated Hessian
               :math:`J^{\\top} J` is invertible.
@@ -191,6 +193,11 @@ class SBA(object):
     def __init__(self, viewpoint_indices, point_indices, weights=None, do_check_args=True):
         self.indices = Indices(viewpoint_indices, point_indices)
         self.do_check_args = do_check_args
+
+        n_visible = self.indices.n_visible
+
+        self.weights = identities2x2(n_visible) if weights is None else weights
+        check_weights(self.weights, n_visible)
 
     def compute(self, x_true, x_pred, A, B):
         """
