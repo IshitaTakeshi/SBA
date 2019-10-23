@@ -142,12 +142,12 @@ def calc_delta_b(indices, V_inv, W, epsilon_b, delta_a):
         for ij in indices.points_by_viewpoint(j):
             d[ij] = np.dot(W[ij].T, delta_a[j])
 
-    e = np.copy(epsilon_b)
+    delta_b = np.copy(epsilon_b)
     for i in range(indices.n_points):
         J = indices.viewpoints_by_point(i)
-        e[i] = e[i] - np.sum(d[J], axis=0)
-        e[i] = np.dot(V_inv[i], e[i])
-    return e
+        delta_b[i] = delta_b[i] - np.sum(d[J], axis=0)
+        delta_b[i] = np.dot(V_inv[i], delta_b[i])
+    return delta_b
 
 
 def can_run_ba(n_viewpoints, n_points, n_visible,
