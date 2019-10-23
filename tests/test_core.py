@@ -184,3 +184,17 @@ def test_calc_epsilon():
     ])
 
     assert_array_equal(calc_epsilon(x_true, x_pred), expected)
+
+
+def test_identities2x2():
+    assert_array_equal(
+        identities2x2(3),
+        np.array([
+            [[1, 0],
+             [0, 1]],
+            [[1, 0],
+             [0, 1]],
+            [[1, 0],
+             [0, 1]]
+        ])
+    )
