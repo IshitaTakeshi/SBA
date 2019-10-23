@@ -212,9 +212,9 @@ class SBA(object):
             | This can be disabled by setting `check_args=False`.
     """
 
-    def __init__(self, viewpoint_indices, point_indices, check_args=True):
+    def __init__(self, viewpoint_indices, point_indices, weights=None, do_check_args=True):
         self.indices = Indices(viewpoint_indices, point_indices)
-        self.do_check_args = check_args
+        self.do_check_args = do_check_args
 
     def compute(self, x_true, x_pred, A, B):
         """
