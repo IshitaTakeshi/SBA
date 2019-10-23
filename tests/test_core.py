@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from sba.indices import Indices
-from sba.core import (calc_delta_a, calc_delta_b, calc_e,
+from sba.core import (identities2x2, calc_delta_a, calc_delta_b, calc_e,
                       calc_epsilon, calc_epsilon_a, calc_epsilon_b,
                       calc_U, calc_V_inv, calc_W, calc_Y, calc_S)
 
@@ -11,6 +11,17 @@ n_point_params = 3
 n_visible = 4  # number of visible points
 n_points = 2
 n_viewpoints = 3
+
+weights = np.array([
+    [[2, 3],
+     [3, 2]],
+    [[1, 0],
+     [0, 1]],
+    [[-3, 4],
+     [4, -3]],
+    [[-1, 2],
+     [2, -1]]
+])
 
 A = np.array([
     [[1, 3, 0, -1],
@@ -23,9 +34,10 @@ A = np.array([
      [0, 2, 1, 1]]
 ])
 
-AtA = np.empty((4, 4, 4))
+ATWA = np.empty((4, 4, 4))
 for index in range(A.shape[0]):
-    AtA[index] = np.dot(A[index].T, A[index])
+    ATWA[index] = np.dot(np.dot(A[index].T, weights[index]), A[index])
+
 
 B = np.array([
     [[2, 3, 1],
@@ -38,9 +50,9 @@ B = np.array([
      [4, 0, 3]]
 ])
 
-BtB = np.empty((4, 3, 3))
+BTWB = np.empty((4, 3, 3))
 for index in range(B.shape[0]):
-    BtB[index] = np.dot(B[index].T, B[index])
+    BTWB[index] = np.dot(np.dot(B[index].T, weights[index]), B[index])
 
 epsilon = np.array([
     [1, 3],
@@ -60,39 +72,42 @@ indices = Indices(viewpoint_indices=[0, 1, 1, 2],
 
 
 def test_calc_delta():
-    U = calc_U(indices, A)
+    U = calc_U(indices, A, weights)
     assert(U.shape == (n_viewpoints, n_pose_params, n_pose_params))
-    assert_array_equal(U[0], AtA[0])
-    assert_array_equal(U[1], AtA[1] + AtA[2])
-    assert_array_equal(U[2], AtA[3])
+    assert_array_equal(U[0], ATWA[0])
+    assert_array_equal(U[1], ATWA[1] + ATWA[2])
+    assert_array_equal(U[2], ATWA[3])
 
-    V_inv = calc_V_inv(indices, B)
+    V_inv = calc_V_inv(indices, B, weights)
     assert(V_inv.shape == (n_points, n_point_params, n_point_params))
-    assert_array_almost_equal(V_inv[0], np.linalg.inv(BtB[0] + BtB[1]))
-    assert_array_almost_equal(V_inv[1], np.linalg.inv(BtB[2] + BtB[3]))
+    assert_array_almost_equal(V_inv[0], np.linalg.inv(BTWB[0] + BTWB[1]))
+    assert_array_almost_equal(V_inv[1], np.linalg.inv(BTWB[2] + BTWB[3]))
 
-    W = calc_W(indices, A, B)
+    W = calc_W(indices, A, B, weights)
     assert(W.shape == (n_visible, n_pose_params, n_point_params))
-    assert_array_equal(W[0], np.dot(A[0].T, B[0]))
-    assert_array_equal(W[1], np.dot(A[1].T, B[1]))
-    assert_array_equal(W[2], np.dot(A[2].T, B[2]))
-    assert_array_equal(W[3], np.dot(A[3].T, B[3]))
+    assert_array_equal(W[0], np.dot(np.dot(A[0].T, weights[0]), B[0]))
+    assert_array_equal(W[1], np.dot(np.dot(A[1].T, weights[1]), B[1]))
+    assert_array_equal(W[2], np.dot(np.dot(A[2].T, weights[2]), B[2]))
+    assert_array_equal(W[3], np.dot(np.dot(A[3].T, weights[3]), B[3]))
 
-    epsilon_a = calc_epsilon_a(indices, A, epsilon)
+    epsilon_a = calc_epsilon_a(indices, A, epsilon, weights)
     assert(epsilon_a.shape == (n_viewpoints, n_pose_params))
     assert_array_equal(epsilon_a[0],
-                       np.dot(A[0].T, epsilon[0]))
+                       np.dot(np.dot(A[0].T, weights[0]), epsilon[0]))
     assert_array_equal(epsilon_a[1],
-                       np.dot(A[1].T, epsilon[1]) + np.dot(A[2].T, epsilon[2]))
+                       np.dot(np.dot(A[1].T, weights[1]), epsilon[1]) +
+                       np.dot(np.dot(A[2].T, weights[2]), epsilon[2]))
     assert_array_equal(epsilon_a[2],
-                       np.dot(A[3].T, epsilon[3]))
+                       np.dot(np.dot(A[3].T, weights[3]), epsilon[3]))
 
-    epsilon_b = calc_epsilon_b(indices, B, epsilon)
+    epsilon_b = calc_epsilon_b(indices, B, epsilon, weights)
     assert(epsilon_b.shape == (n_points, n_point_params))
     assert_array_equal(epsilon_b[0],
-                       np.dot(B[0].T, epsilon[0]) + np.dot(B[1].T, epsilon[1]))
+                       np.dot(np.dot(B[0].T, weights[0]), epsilon[0]) +
+                       np.dot(np.dot(B[1].T, weights[1]), epsilon[1]))
     assert_array_equal(epsilon_b[1],
-                       np.dot(B[2].T, epsilon[2]) + np.dot(B[3].T, epsilon[3]))
+                       np.dot(np.dot(B[2].T, weights[2]), epsilon[2]) +
+                       np.dot(np.dot(B[3].T, weights[3]), epsilon[3]))
 
     Y = calc_Y(indices, W, V_inv)
     assert(Y.shape == (n_visible, n_pose_params, n_point_params))
