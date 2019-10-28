@@ -23,13 +23,14 @@ def can_run_ba(n_viewpoints, n_points, n_visible,
     return n_rows >= n_cols
 
 
-def check_args(indices, x_true, x_pred, A, B, weights):
+def check_args(indices, x_true, x_pred, A, B, weights, mu):
     n_visible = indices.n_visible
     assert(A.shape[0] == B.shape[0] == n_visible)
     assert(x_true.shape[0] == x_pred.shape[0] == n_visible)
 
     # check the jacobians' shape
     assert(A.shape[1] == B.shape[1] == 2)
+    assert(mu >= 0)
 
     if not can_run_ba(indices.n_viewpoints, indices.n_points, n_visible,
                       n_pose_params=A.shape[2],

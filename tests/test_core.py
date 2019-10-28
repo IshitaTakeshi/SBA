@@ -12,6 +12,8 @@ n_visible = 4  # number of visible points
 n_points = 2
 n_viewpoints = 3
 
+mu = 0.8
+
 weights = np.array([
     [[2, 3],
      [3, 2]],
@@ -72,16 +74,18 @@ indices = Indices(viewpoint_indices=[0, 1, 1, 2],
 
 
 def test_calc_delta():
-    U = calc_U(indices, A, weights)
+    U = calc_U(indices, A, weights, mu)
+    D = mu * np.identity(n_pose_params)
     assert(U.shape == (n_viewpoints, n_pose_params, n_pose_params))
-    assert_array_equal(U[0], ATWA[0])
-    assert_array_equal(U[1], ATWA[1] + ATWA[2])
-    assert_array_equal(U[2], ATWA[3])
+    assert_array_equal(U[0], ATWA[0] + D)
+    assert_array_equal(U[1], ATWA[1] + ATWA[2] + D)
+    assert_array_equal(U[2], ATWA[3] + D)
 
-    V_inv = calc_V_inv(indices, B, weights)
+    V_inv = calc_V_inv(indices, B, weights, mu)
+    D = mu * np.identity(n_point_params)
     assert(V_inv.shape == (n_points, n_point_params, n_point_params))
-    assert_array_almost_equal(V_inv[0], np.linalg.inv(BTWB[0] + BTWB[1]))
-    assert_array_almost_equal(V_inv[1], np.linalg.inv(BTWB[2] + BTWB[3]))
+    assert_array_almost_equal(V_inv[0], np.linalg.inv(BTWB[0] + BTWB[1] + D))
+    assert_array_almost_equal(V_inv[1], np.linalg.inv(BTWB[2] + BTWB[3] + D))
 
     W = calc_W(indices, A, B, weights)
     assert(W.shape == (n_visible, n_pose_params, n_point_params))

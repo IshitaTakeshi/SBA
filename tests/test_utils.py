@@ -67,6 +67,14 @@ def test_check_args():
         # nothing should be raised
         sba.compute(x_true, x_pred, A, B, weights)
 
+        # mu has to be >= 0
+        with pytest.raises(AssertionError):
+            sba.compute(x_true, x_pred, A, B, weights, mu=-0.1)
+
+        # nothing should be raised
+        sba.compute(x_true, x_pred, A, B, weights, mu=0.0)
+        sba.compute(x_true, x_pred, A, B, weights, mu=1.0)
+
     case1()
     case2()
 

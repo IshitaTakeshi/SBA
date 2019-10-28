@@ -85,14 +85,24 @@ def test_compute():
 
     sba, J = create_jacobian(mask, A, B)
 
+    # unweighted Gauss-Newton
     H = np.dot(J.T, J)
     b = np.dot(J.T, (x_true - x_pred).flatten())
     delta = np.linalg.solve(H, b)
-
     delta_a, delta_b = sba.compute(x_true, x_pred, A, B, weights=None)
     assert_array_almost_equal(delta[:size_A], delta_a.flatten())
     assert_array_almost_equal(delta[size_A:], delta_b.flatten())
 
+    # Levenberg-Marquardt
+    mu = 0.5
+    D = mu * np.identity(b.shape[0])
+    delta = np.linalg.solve(H + D, b)
+
+    delta_a, delta_b = sba.compute(x_true, x_pred, A, B, weights=None, mu=mu)
+    assert_array_almost_equal(delta[:size_A], delta_a.flatten())
+    assert_array_almost_equal(delta[size_A:], delta_b.flatten())
+
+    # weigthed Gauss-Newton
     # weights have to be symmetric
     weights = np.array([np.dot(w.T, w) for w in np.random.random((N, 2, 2))])
     W = create_weight_matrix(weights)

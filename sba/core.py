@@ -47,27 +47,28 @@ def calc_Vi(Bi, weights):
     return calc_XTWX(Bi, weights)
 
 
-def calc_U(indices, A, weights):
+def calc_U(indices, A, weights, mu):
     n_pose_params = A.shape[2]
     m = indices.n_viewpoints
 
     U = np.empty((m, n_pose_params, n_pose_params))
-
+    D = mu * np.identity(n_pose_params)
     for j in range(m):
         I = indices.points_by_viewpoint(j)
-        U[j] = calc_Uj(A[I], weights[I])
+        U[j] = calc_Uj(A[I], weights[I]) + D
     return U
 
 
-def calc_V_inv(indices, B, weights):
+def calc_V_inv(indices, B, weights, mu):
     n_point_params = B.shape[2]
     n = indices.n_points
 
     V_inv = np.empty((n, n_point_params, n_point_params))
+    D = mu * np.identity(n_point_params)
 
     for i in range(n):
         J = indices.viewpoints_by_point(i)
-        Vi = calc_Vi(B[J], weights[J])
+        Vi = calc_Vi(B[J], weights[J]) + D
         V_inv[i] = np.linalg.pinv(Vi)
     return V_inv
 
@@ -194,7 +195,7 @@ class SBA(object):
         self.indices = Indices(viewpoint_indices, point_indices)
         self.do_check_args = do_check_args
 
-    def compute(self, x_true, x_pred, A, B, weights=None):
+    def compute(self, x_true, x_pred, A, B, weights=None, mu=0.0):
         """
         Calculate a Gauss-Newton update.
         Elements of the arguments correspond to argument arrays of the
@@ -244,10 +245,10 @@ class SBA(object):
             weights = identities2x2(self.indices.n_visible)
 
         if self.do_check_args:
-            check_args(self.indices, x_true, x_pred, A, B, weights)
+            check_args(self.indices, x_true, x_pred, A, B, weights, mu)
 
-        U = calc_U(self.indices, A, weights)
-        V_inv = calc_V_inv(self.indices, B, weights)
+        U = calc_U(self.indices, A, weights, mu)
+        V_inv = calc_V_inv(self.indices, B, weights, mu)
         W = calc_W(self.indices, A, B, weights)
         Y = calc_Y(self.indices, W, V_inv)
         S = calc_S(self.indices, U, Y, W)
