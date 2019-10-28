@@ -232,6 +232,11 @@ class SBA(object):
                 | Jacobian with respect to 3D points.
                 | Each block `B[index]` represents a jacobian of
                   `x_pred[index]` with respect to a 3D point coordinate.
+            weights (np.ndarray), shape (n_keypoints, 2, 2):
+                | Weights for Gauss-Newton
+                | Each `weights[index]` has to be symmetric
+            mu (float), mu >= 0:
+                | Damping factor in the Levenberg-Marquardt method
 
         Returns:
             (tuple):
