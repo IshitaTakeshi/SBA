@@ -2,7 +2,7 @@ import itertools
 import numpy as np
 
 from sba.indices import Indices
-from sba.utils import check_args, check_weights, identities2x2
+from sba.utils import check_args, identities2x2
 
 
 def calc_epsilon(x_true, x_pred):
