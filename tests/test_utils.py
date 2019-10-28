@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from sba.indices import Indices
+from sba.utils import identities2x2
 from sba.core import SBA
 
 
@@ -56,26 +57,24 @@ def test_check_args():
         sba = SBA(viewpoint_indices, point_indices)
         sba.compute(x_true, x_pred, A, B)
 
+        # weights are non symmetric
+        weights = np.arange(n_visible * 2 * 2).reshape(n_visible, 2, 2)
+        with pytest.raises(ValueError):
+            sba.compute(x_true, x_pred, A, B, weights)
+
+        # make them symmetric
+        weights = np.array([np.dot(w.T, w) for w in weights])
+        # nothing should be raised
+        sba.compute(x_true, x_pred, A, B, weights)
+
     case1()
     case2()
 
 
-def test_check_weights():
-    viewpoint_indices = [0, 1, 0, 1, 0, 1]
-    point_indices = [0, 0, 1, 1, 2, 2]
-
-    weights = np.arange(24).reshape(6, 2, 2)
-    with pytest.raises(ValueError):
-        SBA(viewpoint_indices, point_indices, weights)
-
-    # make them symmetric
-    weights = np.array([np.dot(w.T, w) for w in weights])
-    # nothing should be raised
-    SBA(viewpoint_indices, point_indices, weights)
-
+def test_all_symmmetric():
     # identity arrays created
     assert_array_equal(
-        SBA([0, 0, 1, 1], [0, 1, 0, 1], None).weights,
+        identities2x2(4),
         np.array([
             [[1, 0],
              [0, 1]],
