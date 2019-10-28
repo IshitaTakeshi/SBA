@@ -6,7 +6,7 @@ from sba.indices import Indices
 from sba.core import SBA
 
 
-def create_jacobian(mask, A, B, weights):
+def create_jacobian(mask, A, B):
     assert(A.shape[0] == B.shape[0])
 
     N = np.sum(mask)
@@ -45,12 +45,12 @@ def create_jacobian(mask, A, B, weights):
 
         index += 1
 
-    sba = SBA(viewpoint_indices, point_indices, weights)
+    sba = SBA(viewpoint_indices, point_indices)
     J = np.hstack((JA, JB))
     return sba, J
 
 
-def create_weights(weights):
+def create_weight_matrix(weights):
     N = weights.shape[0]
     W = np.zeros((N * 2, N * 2))
     for index in range(N):
@@ -78,20 +78,29 @@ def test_compute():
     x_pred = np.random.uniform(-9, 9, (N, 2))
     A = np.random.random((N, 2, 4))
     B = np.random.random((N, 2, 3))
-    # weights have to be symmetric
-    weights = np.array([np.dot(w.T, w) for w in np.random.random((N, 2, 2))])
-
-    sba, J = create_jacobian(mask, A, B, weights)
-
-    W = create_weights(weights)
-    H = np.dot(np.dot(J.T, W), J)
-    b = np.dot(np.dot(J.T, W), (x_true - x_pred).flatten())
-    delta = np.linalg.solve(H, b)
 
     n_pose_params = A.shape[2]
     n_viewpoints = mask.shape[1]
     size_A = n_pose_params * n_viewpoints
 
-    delta_a, delta_b = sba.compute(x_true, x_pred, A, B)
+    sba, J = create_jacobian(mask, A, B)
+
+    H = np.dot(J.T, J)
+    b = np.dot(J.T, (x_true - x_pred).flatten())
+    delta = np.linalg.solve(H, b)
+
+    delta_a, delta_b = sba.compute(x_true, x_pred, A, B, weights=None)
+    assert_array_almost_equal(delta[:size_A], delta_a.flatten())
+    assert_array_almost_equal(delta[size_A:], delta_b.flatten())
+
+    # weights have to be symmetric
+    weights = np.array([np.dot(w.T, w) for w in np.random.random((N, 2, 2))])
+    W = create_weight_matrix(weights)
+
+    H = np.dot(np.dot(J.T, W), J)
+    b = np.dot(np.dot(J.T, W), (x_true - x_pred).flatten())
+    delta = np.linalg.solve(H, b)
+
+    delta_a, delta_b = sba.compute(x_true, x_pred, A, B, weights)
     assert_array_almost_equal(delta[:size_A], delta_a.flatten())
     assert_array_almost_equal(delta[size_A:], delta_b.flatten())

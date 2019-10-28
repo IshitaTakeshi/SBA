@@ -190,16 +190,11 @@ class SBA(object):
             | This can be disabled by setting `check_args=False`.
     """
 
-    def __init__(self, viewpoint_indices, point_indices, weights=None, do_check_args=True):
+    def __init__(self, viewpoint_indices, point_indices, do_check_args=True):
         self.indices = Indices(viewpoint_indices, point_indices)
         self.do_check_args = do_check_args
 
-        n_visible = self.indices.n_visible
-
-        self.weights = identities2x2(n_visible) if weights is None else weights
-        check_weights(self.weights, n_visible)
-
-    def compute(self, x_true, x_pred, A, B):
+    def compute(self, x_true, x_pred, A, B, weights=None):
         """
         Calculate a Gauss-Newton update.
         Elements of the arguments correspond to argument arrays of the
@@ -244,17 +239,21 @@ class SBA(object):
                 delta_b (np.ndarray), shape (n_points, n_point_params):
                     Update of 3D points.
         """
-        if self.do_check_args:
-            check_args(self.indices, x_true, x_pred, A, B)
 
-        U = calc_U(self.indices, A, self.weights)
-        V_inv = calc_V_inv(self.indices, B, self.weights)
-        W = calc_W(self.indices, A, B, self.weights)
+        if weights is None:
+            weights = identities2x2(self.indices.n_visible)
+
+        if self.do_check_args:
+            check_args(self.indices, x_true, x_pred, A, B, weights)
+
+        U = calc_U(self.indices, A, weights)
+        V_inv = calc_V_inv(self.indices, B, weights)
+        W = calc_W(self.indices, A, B, weights)
         Y = calc_Y(self.indices, W, V_inv)
         S = calc_S(self.indices, U, Y, W)
         epsilon = calc_epsilon(x_true, x_pred)
-        epsilon_a = calc_epsilon_a(self.indices, A, epsilon, self.weights)
-        epsilon_b = calc_epsilon_b(self.indices, B, epsilon, self.weights)
+        epsilon_a = calc_epsilon_a(self.indices, A, epsilon, weights)
+        epsilon_b = calc_epsilon_b(self.indices, B, epsilon, weights)
         e = calc_e(self.indices, Y, epsilon_a, epsilon_b)
         delta_a = calc_delta_a(S, e)
         delta_b = calc_delta_b(self.indices, V_inv, W, epsilon_b, delta_a)
