@@ -2,7 +2,9 @@ import numpy as np
 
 
 def all_symmetric(XS):
-    return np.allclose(XS, np.swapaxes(XS, 1, 2))
+    # check if top right and bottom left are same
+    assert(XS.shape[1:3] == (2, 2))
+    return np.allclose(XS[:, 0, 1], XS[:, 1, 0])
 
 
 def identities2x2(n):
