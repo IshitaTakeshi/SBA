@@ -84,6 +84,7 @@ def test_calc_delta():
     V_inv = calc_V_inv(indices, B, weights, mu)
     D = mu * np.identity(n_point_params)
     assert(V_inv.shape == (n_points, n_point_params, n_point_params))
+
     assert_array_almost_equal(V_inv[0], np.linalg.inv(BTWB[0] + BTWB[1] + D))
     assert_array_almost_equal(V_inv[1], np.linalg.inv(BTWB[2] + BTWB[3] + D))
 

@@ -1,9 +1,9 @@
 # Sparse Bundle Adjustment
 
-[![Build Status](https://travis-ci.org/IshitaTakeshi/SBA.svg?branch=develop)](https://travis-ci.org/IshitaTakeshi/SBA)
-[![codecov](https://codecov.io/gh/IshitaTakeshi/SBA/branch/develop/graph/badge.svg)](https://codecov.io/gh/IshitaTakeshi/SBA)
+[![Build Status](https://travis-ci.org/IshitaTakeshi/SBA.svg?branch=master)](https://travis-ci.org/IshitaTakeshi/SBA)
+[![codecov](https://codecov.io/gh/IshitaTakeshi/SBA/branch/master/graph/badge.svg)](https://codecov.io/gh/IshitaTakeshi/SBA)
 
-[Documentation](https://sparsebundleadjustment.readthedocs.io/en/develop/)
+[Documentation](https://sparsebundleadjustment.readthedocs.io/en/master/)
 
 Python implementation of Sparse Bundle Adjustment.
 
