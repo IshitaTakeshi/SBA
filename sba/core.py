@@ -155,7 +155,7 @@ def calc_delta_b(indices, V_inv, W, epsilon_b, delta_a):
 class SBA(object):
     """
     The constructor takes two arguments: `viewpoint_indices` and
-    `point_indices`.
+    `point_indices`, that represent visibility of 3D points in each viewpoint.
 
     In general, not all 3D points can be observed from all viewpoints.
     Some points cannot be observed because of occlusion, motion blur, etc.
