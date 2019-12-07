@@ -2,8 +2,8 @@ import itertools
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal
-from sba.indices import Indices
-from sba.core import SBA
+from sparseba.indices import Indices
+from sparseba.core import SBA
 
 
 def create_jacobian(mask, A, B):

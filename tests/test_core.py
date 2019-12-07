@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
-from sba.indices import Indices
-from sba.core import (identities2x2, calc_delta_a, calc_delta_b, calc_e,
+from sparseba.indices import Indices
+from sparseba.core import (identities2x2, calc_delta_a, calc_delta_b, calc_e,
                       calc_epsilon, calc_epsilon_a, calc_epsilon_b,
                       calc_U, calc_V_inv, calc_W, calc_Y, calc_S)
 

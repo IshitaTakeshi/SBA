@@ -8,7 +8,7 @@ setup(
     author='Takeshi Ishita',
     author_email='ishitah.takeshi@gmail.com',
     license='Apache 2.0',
-    packages=['sba'],
+    packages=['sparseba'],
     install_requires=['numpy'],
     tests_require=['pytest']
 )

@@ -3,9 +3,9 @@ import pytest
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from sba.indices import Indices
-from sba.utils import identities2x2
-from sba.core import SBA
+from sparseba.indices import Indices
+from sparseba.utils import identities2x2
+from sparseba.core import SBA
 
 
 def test_check_args():
