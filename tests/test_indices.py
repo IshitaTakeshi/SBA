@@ -1,7 +1,7 @@
 import pytest
 from numpy.testing import assert_array_equal
 
-from sba.indices import Indices, indices_are_unique
+from sparseba.indices import Indices, indices_are_unique
 
 
 def test_indices_are_unique():

@@ -2,13 +2,13 @@ from setuptools import setup
 
 
 setup(
-    name='sba',
+    name='sparseba',
     description='SBA',
     url='http://github.com/IshitaTakeshi/SBA',
     author='Takeshi Ishita',
     author_email='ishitah.takeshi@gmail.com',
     license='Apache 2.0',
-    packages=['sba'],
+    packages=['sparseba'],
     install_requires=['numpy'],
     tests_require=['pytest']
 )
