@@ -50,6 +50,15 @@ def create_jacobian(mask, A, B):
     return sba, J
 
 
+def create_weight_matrix(weights):
+    N = weights.shape[0]
+    W = np.zeros((N * 2, N * 2))
+    for index in range(N):
+        k = index * 2
+        W[k:k+2, k:k+2] = weights[index]
+    return W
+
+
 def test_compute():
     # there shouldn't be an empty row / column
     # (empty means that all row elements / column elements = 0)
@@ -70,14 +79,38 @@ def test_compute():
     A = np.random.random((N, 2, 4))
     B = np.random.random((N, 2, 3))
 
-    sba, J = create_jacobian(mask, A, B)
-    delta_a, delta_b = sba.compute(x_true, x_pred, A, B)
-
-    delta = np.linalg.solve(np.dot(J.T, J), np.dot(J.T, (x_true - x_pred).flatten()))
-
     n_pose_params = A.shape[2]
     n_viewpoints = mask.shape[1]
     size_A = n_pose_params * n_viewpoints
 
+    sba, J = create_jacobian(mask, A, B)
+
+    # unweighted Gauss-Newton
+    H = np.dot(J.T, J)
+    b = np.dot(J.T, (x_true - x_pred).flatten())
+    delta = np.linalg.solve(H, b)
+    delta_a, delta_b = sba.compute(x_true, x_pred, A, B, weights=None)
+    assert_array_almost_equal(delta[:size_A], delta_a.flatten())
+    assert_array_almost_equal(delta[size_A:], delta_b.flatten())
+
+    # Levenberg-Marquardt
+    mu = 0.5
+    D = mu * np.identity(b.shape[0])
+    delta = np.linalg.solve(H + D, b)
+
+    delta_a, delta_b = sba.compute(x_true, x_pred, A, B, weights=None, mu=mu)
+    assert_array_almost_equal(delta[:size_A], delta_a.flatten())
+    assert_array_almost_equal(delta[size_A:], delta_b.flatten())
+
+    # weigthed Gauss-Newton
+    # weights have to be symmetric
+    weights = np.array([np.dot(w.T, w) for w in np.random.random((N, 2, 2))])
+    W = create_weight_matrix(weights)
+
+    H = np.dot(np.dot(J.T, W), J)
+    b = np.dot(np.dot(J.T, W), (x_true - x_pred).flatten())
+    delta = np.linalg.solve(H, b)
+
+    delta_a, delta_b = sba.compute(x_true, x_pred, A, B, weights)
     assert_array_almost_equal(delta[:size_A], delta_a.flatten())
     assert_array_almost_equal(delta[size_A:], delta_b.flatten())
